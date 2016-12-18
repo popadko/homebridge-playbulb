@@ -1,0 +1,23 @@
+{
+  "name": "homebridge-playbulb",
+  "version": "0.0.3",
+  "description": "Playbulb plugin for homebridge: https://github.com/nfarina/homebridge",
+  "license": "MIT",
+  "keywords": [
+    "homebridge-plugin"
+  ],
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "author": {
+    "name": "Oleg Popadko"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:olegpopadko/homebridge-playbulb.git"
+  },
+  "dependencies": {
+    "noble": "^1.7"
+  }
+}
