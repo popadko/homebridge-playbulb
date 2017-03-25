@@ -1,12 +1,15 @@
-var noble = require('noble');
-var Service, Characteristic;
+'use strict';
+let BulbClass = require('./bulb').BulbClass;
+let Service, Characteristic;
 
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory("homebridge-playbulb", "PlayBulb", FakeBulbAccessory);
+    homebridge.registerAccessory("homebridge-playbulb", "PlayBulb", function (log, config) {
+        var bulb = new BulbClass(log, config, Service, Characteristic);
+        return bulb;
+    });
 };
-
 
 FakeBulbAccessory.prototype.isReady = function (callback) {
     if (callback) {
@@ -162,63 +165,6 @@ FakeBulbAccessory.prototype.write = function (colorBytes) {
     }
 };
 
-FakeBulbAccessory.prototype.getServices = function() {
-    var lightbulbService = new Service.Lightbulb(this.name);
-
-    lightbulbService
-        .getCharacteristic(Characteristic.On)
-        .on('get', this.getPowerOn.bind(this))
-        .on('set', this.setPowerOn.bind(this));
-
-    lightbulbService
-        .getCharacteristic(Characteristic.Brightness)
-        .on('get', this.getBrightness.bind(this))
-        .on('set', this.setBrightness.bind(this));
-
-    lightbulbService
-        .addCharacteristic(Characteristic.Saturation)
-        .on('get', this.getSaturation.bind(this))
-        .on('set', this.setSaturation.bind(this));
-
-    lightbulbService
-        .addCharacteristic(Characteristic.Hue)
-        .on('get', this.getHue.bind(this))
-        .on('set', this.setHue.bind(this));
-
-    return [lightbulbService];
-};
-
-// Need to handle 1.0 as 100%, since once it is a number, there is no difference between it and 1
-// <http://stackoverflow.com/questions/7422072/javascript-how-to-detect-number-as-a-decimal-including-1-0>
-function isOnePointZero(n) {
-    return typeof n == "string" && n.indexOf('.') != -1 && parseFloat(n) === 1;
-}
-
-// Check to see if string passed in is a percentage
-function isPercentage(n) {
-    return typeof n === "string" && n.indexOf('%') != -1;
-}
-
-function bound01(n, max) {
-    if (isOnePointZero(n)) { n = "100%"; }
-
-    var processPercent = isPercentage(n);
-    n = Math.min(max, Math.max(0, parseFloat(n)));
-
-    // Automatically convert percentage into number
-    if (processPercent) {
-        n = parseInt(n * max, 10) / 100;
-    }
-
-    // Handle floating point rounding errors
-    if ((Math.abs(n - max) < 0.000001)) {
-        return 1;
-    }
-
-    // Convert into [0, 1] range if it isn't already
-    return (n % max) / parseFloat(max);
-}
-
 function hsvToRgb(h, s, v) {
     console.log(h, s, v);
     h = bound01(h, 360) * 6;
@@ -240,9 +186,4 @@ function hsvToRgb(h, s, v) {
     var buffer = Buffer.from(values);
     console.log(buffer);
     return buffer;
-}
-
-
-function floatToHex(float) {
-    return (float * 255) & 0xff;
 }
