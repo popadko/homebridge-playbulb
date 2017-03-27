@@ -1,7 +1,6 @@
 'use strict';
-let noble = require('noble');
 
-class BulbClass {
+class ColorBulbClass {
     constructor(log, config, homebridgeService, homebridgeCharacteristic) {
         this.homebridgeService = homebridgeService;
         this.homebridgeCharacteristic = homebridgeCharacteristic;
@@ -67,7 +66,7 @@ class BulbClass {
     setBrightness(value, callback) {
         this.brightness = value;
         this.write(this.createBrightnessBuffer());
-        callback(null);
+        callback(false);
     }
 
     write(colorBytes) {

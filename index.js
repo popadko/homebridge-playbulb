@@ -1,15 +1,20 @@
 'use strict';
-let BulbClass = require('./bulb').BulbClass;
-let Service, Characteristic;
+let BulbWithBrightnessFactoryClass = require('./BulbWithBrightnessFactory').BulbWithBrightnessFactoryClass;
+let BulbWithBrightnessHombridgeServicesProviderClass = require('./BulbWithBrightnessHombridgeServicesProvider').BulbWithBrightnessHombridgeServicesProviderClass;
+
+let Service;
+let Characteristic;
+let BulbWithBrightnessFactory = new BulbWithBrightnessFactoryClass();
 
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     homebridge.registerAccessory("homebridge-playbulb", "PlayBulb", function (log, config) {
-        var bulb = new BulbClass(log, config, Service, Characteristic);
-        return bulb;
+        let bulbWithBrightness = BulbWithBrightnessFactory.create(config['address'], config['name'], log);
+        return new BulbWithBrightnessHombridgeServicesProviderClass(bulbWithBrightness, Service, Characteristic);
     });
 };
+
 
 FakeBulbAccessory.prototype.isReady = function (callback) {
     if (callback) {
