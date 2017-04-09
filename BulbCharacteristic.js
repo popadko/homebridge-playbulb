@@ -24,6 +24,14 @@ class BulbCharacteristicClass {
         }
     }
 
+    read(callback) {
+        if (this.connected) {
+            this.nobleCharacteristic.read(callback);
+        } else {
+            console.log('Not Connected')
+        }
+    }
+
     /**
      * @private
      *
