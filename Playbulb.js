@@ -3,15 +3,36 @@
 class PlaybulbClass {
     constructor(colorCharacteristic) {
         this.colorCharacteristic = colorCharacteristic;
-        // this.whiteBrightness = this.colorCharacteristic.read();
-        this.whiteBrightness = 100;
-        this.hue = 0;
-        this.saturation = 100;
-        this.brightness = 100;
+        this.whiteBrightness = undefined;
+        this.hue = undefined;
+        this.saturation = undefined;
+        this.brightness = undefined;
+    }
+
+    read(callback) {
+        let self = this;
+
+        this.colorCharacteristic.read(function (error, buffer) {
+            self.whiteBrightness = self.bound01(buffer[0], 255) * 100;
+            let hsv = self.rgbToHsv(buffer[1], buffer[2], buffer[3]);
+            self.hue = hsv.h;
+            self.saturation = hsv.s;
+            self.brightness = hsv.v;
+            callback();
+        });
     }
 
     getWhiteBrightness(callback) {
-        callback(null, this.whiteBrightness);
+        let self = this;
+
+        if (this.whiteBrightness !== undefined) {
+            callback(null, self.whiteBrightness);
+            return;
+        }
+
+        this.read(function () {
+            callback(null, self.whiteBrightness);
+        });
     }
 
     setWhiteBrightness(value, callback) {
@@ -21,7 +42,16 @@ class PlaybulbClass {
     }
 
     getBrightness(callback) {
-        callback(null, this.brightness);
+        let self = this;
+
+        if (this.brightness !== undefined) {
+            callback(null, self.brightness);
+            return;
+        }
+
+        this.read(function () {
+            callback(null, self.brightness);
+        });
     }
 
     setBrightness(value, callback) {
@@ -31,7 +61,16 @@ class PlaybulbClass {
     }
 
     getHue(callback) {
-        callback(null, this.hue);
+        let self = this;
+
+        if (this.hue !== undefined) {
+            callback(null, self.hue);
+            return;
+        }
+
+        this.read(function () {
+            callback(null, self.hue);
+        });
     }
 
     setHue(value, callback) {
@@ -41,7 +80,16 @@ class PlaybulbClass {
     }
 
     getSaturation(callback) {
-        callback(null, this.saturation);
+        let self = this;
+
+        if (this.saturation !== undefined) {
+            callback(null, self.saturation);
+            return;
+        }
+
+        this.read(function () {
+            callback(null, self.saturation);
+        });
     }
 
     setSaturation(value, callback) {
@@ -78,6 +126,43 @@ class PlaybulbClass {
         let brightness = this.getBrightnessValueInHexRange(this.whiteBrightness);
         let buffer = new Buffer([brightness, rgb.r, rgb.g, rgb.b]);
         this.colorCharacteristic.write(buffer);
+    }
+
+    // `rgbToHsv`
+    // Converts an RGB color value to HSV
+    // *Assumes:* r, g, and b are contained in the set [0, 255] or [0, 1]
+    // *Returns:* { h, s, v } in [0,1]
+    /**
+     * @private
+     *
+     * @param r
+     * @param g
+     * @param b
+     * @returns {{h: *, s: (number|*), v: *}}
+     */
+    rgbToHsv(r, g, b) {
+        r = this.bound01(r, 255);
+        g = this.bound01(g, 255);
+        b = this.bound01(b, 255);
+
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, v = max;
+
+        var d = max - min;
+        s = max === 0 ? 0 : d / max;
+
+        if(max == min) {
+            h = 0; // achromatic
+        }
+        else {
+            switch(max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return { h: h * 360, s: s * 100, v: v * 100 };
     }
 
     /**

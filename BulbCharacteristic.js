@@ -6,13 +6,24 @@ class BulbCharacteristicClass {
         this.bulbAddress = bulbAddress;
         this.uuid = uuid;
         this.connected = false;
+        this.poweredOn = false;
+        this.connecting = false;
         let self = this;
-        this.connect(function(result, nobleCharacteristic) {
-            self.connectCallback(result, nobleCharacteristic);
-        })
+        noble.on('stateChange', function(state) {
+            self.poweredOn = true;
+            if (state !== 'poweredOn') {
+                self.connectCallback(false);
+                self.poweredOn = false;
+                noble.stopScanning();
+            }
+        });
+        noble.on('warning', function() {
+            console.log(arguments);
+        });
     }
 
     write(bytesBuffer) {
+        let self = this;
         if (this.connected) {
             this.nobleCharacteristic.write(bytesBuffer, true, function(error) {
                 if (error) {
@@ -20,15 +31,24 @@ class BulbCharacteristicClass {
                 }
             });
         } else {
-            console.log('Not Connected')
+            this.connect(function() {
+                self.nobleCharacteristic.write(bytesBuffer, true, function(error) {
+                    if (error) {
+                        throw error;
+                    }
+                })
+            })
         }
     }
 
     read(callback) {
+        let self = this;
         if (this.connected) {
             this.nobleCharacteristic.read(callback);
         } else {
-            console.log('Not Connected')
+            this.connect(function() {
+                self.nobleCharacteristic.read(callback)
+            });
         }
     }
 
@@ -39,29 +59,53 @@ class BulbCharacteristicClass {
      * @param nobleCharacteristic
      */
     connectCallback(result, nobleCharacteristic) {
-        if (!result) {
-            throw 'Bulb not ready';
+        this.connected = false;
+        if (result) {
+            this.nobleCharacteristic = nobleCharacteristic;
+            this.connected = true;
         }
-        this.connected = true;
-        this.nobleCharacteristic = nobleCharacteristic;
+        this.connecting = false;
     }
 
     /**
      * @private
      */
     connect(callback) {
+        if (this.connected === true) {
+            callback();
+            return;
+        }
+
         let self = this;
-        noble.on('stateChange', function(state) {
-            if (state === 'poweredOn') {
-                noble.startScanning()
+
+        if (this.connecting === true) {
+            setTimeout(function() {
+                if (self.connected === true) {
+                    callback();
+                } else {
+                    self.connect(callback);
+                }
+            }, 1000);
+            return;
+        }
+        this.connecting = true;
+        this.scanningTimeout(callback);
+    }
+
+    scanningTimeout(callback) {
+        let self = this;
+        setTimeout(function() {
+            if (self.poweredOn) {
+                self.scanning(callback);
             } else {
-                callback(false);
-                noble.stopScanning();
+                self.scanningTimeout(callback);
             }
-        });
-        noble.on('warning', function() {
-            console.log(arguments);
-        });
+        }, 1000);
+    }
+
+    scanning(callback) {
+        let self = this;
+        noble.startScanning();
         noble.on('discover', function(peripheral) {
             if (peripheral.address.toLowerCase() === self.bulbAddress.toLowerCase()) {
                 peripheral.connect(function(error) {
@@ -79,7 +123,9 @@ class BulbCharacteristicClass {
                                 }
                                 characteristics.forEach(function(characteristic) {
                                     if (characteristic.uuid === self.uuid) {
-                                        callback(true, characteristic);
+                                        noble.stopScanning();
+                                        self.connectCallback(true, characteristic);
+                                        callback();
                                     }
                                 });
 
@@ -90,7 +136,6 @@ class BulbCharacteristicClass {
             }
         });
     }
-
 }
 
 module.exports = {
