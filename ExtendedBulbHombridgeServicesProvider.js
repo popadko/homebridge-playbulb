@@ -21,39 +21,39 @@ class ExtendedBulbHombridgeServicesProviderClass {
 
     getServices() {
         let playbulb = new PlaybulbClass(this.createColorCharacteristic(this.config['address']));
-        let powerdControlPlaybulb = new PowerControlPlaybulbClass(playbulb);
+        let powerControlPlaybulb = new PowerControlPlaybulbClass(playbulb);
 
         let simpleLightbulbService = new this.homebridgeService.Lightbulb(this.config['name'], 'simple');
         simpleLightbulbService
             .getCharacteristic(this.homebridgeCharacteristic.On)
-            .on('get', powerdControlPlaybulb.getWhitePowerOn.bind(powerdControlPlaybulb))
-            .on('set', powerdControlPlaybulb.setWhitePowerOn.bind(powerdControlPlaybulb));
+            .on('get', powerControlPlaybulb.getWhitePowerOn.bind(powerControlPlaybulb))
+            .on('set', powerControlPlaybulb.setWhitePowerOn.bind(powerControlPlaybulb));
 
         simpleLightbulbService
             .getCharacteristic(this.homebridgeCharacteristic.Brightness)
-            .on('get', powerdControlPlaybulb.getWhiteBrightness.bind(powerdControlPlaybulb))
-            .on('set', powerdControlPlaybulb.setWhiteBrightness.bind(powerdControlPlaybulb));
+            .on('get', powerControlPlaybulb.getWhiteBrightness.bind(powerControlPlaybulb))
+            .on('set', powerControlPlaybulb.setWhiteBrightness.bind(powerControlPlaybulb));
 
         let lightbulbService = new this.homebridgeService.Lightbulb(this.config['name'], 'color');
         lightbulbService
             .getCharacteristic(this.homebridgeCharacteristic.On)
-            .on('get', powerdControlPlaybulb.getPowerOn.bind(powerdControlPlaybulb))
-            .on('set', powerdControlPlaybulb.setPowerOn.bind(powerdControlPlaybulb));
+            .on('get', powerControlPlaybulb.getPowerOn.bind(powerControlPlaybulb))
+            .on('set', powerControlPlaybulb.setPowerOn.bind(powerControlPlaybulb));
 
         lightbulbService
             .getCharacteristic(this.homebridgeCharacteristic.Brightness)
-            .on('get', powerdControlPlaybulb.getBrightness.bind(powerdControlPlaybulb))
-            .on('set', powerdControlPlaybulb.setBrightness.bind(powerdControlPlaybulb));
+            .on('get', powerControlPlaybulb.getBrightness.bind(powerControlPlaybulb))
+            .on('set', powerControlPlaybulb.setBrightness.bind(powerControlPlaybulb));
 
         lightbulbService
             .addCharacteristic(this.homebridgeCharacteristic.Saturation)
-            .on('get', powerdControlPlaybulb.getSaturation.bind(powerdControlPlaybulb))
-            .on('set', powerdControlPlaybulb.setSaturation.bind(powerdControlPlaybulb));
+            .on('get', powerControlPlaybulb.getSaturation.bind(powerControlPlaybulb))
+            .on('set', powerControlPlaybulb.setSaturation.bind(powerControlPlaybulb));
 
         lightbulbService
             .addCharacteristic(this.homebridgeCharacteristic.Hue)
-            .on('get', powerdControlPlaybulb.getHue.bind(powerdControlPlaybulb))
-            .on('set', powerdControlPlaybulb.setHue.bind(powerdControlPlaybulb));
+            .on('get', powerControlPlaybulb.getHue.bind(powerControlPlaybulb))
+            .on('set', powerControlPlaybulb.setHue.bind(powerControlPlaybulb));
 
         return [simpleLightbulbService, lightbulbService];
     }
