@@ -12,8 +12,8 @@ class BulbCharacteristicClass {
         noble.on('stateChange', function(state) {
             self.poweredOn = true;
             if (state !== 'poweredOn') {
-                self.connectCallback(false);
                 self.poweredOn = false;
+                self.connectCallback(false);
                 noble.stopScanning();
             }
         });
@@ -24,32 +24,26 @@ class BulbCharacteristicClass {
 
     write(bytesBuffer) {
         let self = this;
-        if (this.connected) {
-            this.nobleCharacteristic.write(bytesBuffer, true, function(error) {
-                if (error) {
-                    throw error;
-                }
-            });
-        } else {
-            this.connect(function() {
+        this.connect(function() {
+            if (self.nobleCharacteristic) {
                 self.nobleCharacteristic.write(bytesBuffer, true, function(error) {
                     if (error) {
                         throw error;
                     }
                 })
-            })
-        }
+            }
+        });
     }
 
     read(callback) {
         let self = this;
-        if (this.connected) {
-            this.nobleCharacteristic.read(callback);
-        } else {
-            this.connect(function() {
+        this.connect(function() {
+            if (self.nobleCharacteristic) {
                 self.nobleCharacteristic.read(callback)
-            });
-        }
+            } else {
+                callback(true);
+            }
+        });
     }
 
     /**
@@ -71,7 +65,7 @@ class BulbCharacteristicClass {
      * @private
      */
     connect(callback) {
-        if (this.connected === true) {
+        if (this.poweredOn === false || this.connected === true) {
             callback();
             return;
         }

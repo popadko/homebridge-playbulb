@@ -13,12 +13,14 @@ class PlaybulbClass {
         let self = this;
 
         this.colorCharacteristic.read(function (error, buffer) {
-            self.whiteBrightness = self.bound01(buffer[0], 255) * 100;
-            let hsv = self.rgbToHsv(buffer[1], buffer[2], buffer[3]);
-            self.hue = hsv.h;
-            self.saturation = hsv.s;
-            self.brightness = hsv.v;
-            callback();
+            if (!error) {
+                self.whiteBrightness = self.bound01(buffer[0], 255) * 100;
+                let hsv = self.rgbToHsv(buffer[1], buffer[2], buffer[3]);
+                self.hue = hsv.h;
+                self.saturation = hsv.s;
+                self.brightness = hsv.v;
+            }
+            callback(error);
         });
     }
 
@@ -30,8 +32,8 @@ class PlaybulbClass {
             return;
         }
 
-        this.read(function () {
-            callback(null, self.whiteBrightness);
+        this.read(function (error) {
+            callback(error, self.whiteBrightness);
         });
     }
 
@@ -49,8 +51,8 @@ class PlaybulbClass {
             return;
         }
 
-        this.read(function () {
-            callback(null, self.brightness);
+        this.read(function (error) {
+            callback(error, self.brightness);
         });
     }
 
@@ -68,8 +70,8 @@ class PlaybulbClass {
             return;
         }
 
-        this.read(function () {
-            callback(null, self.hue);
+        this.read(function (error) {
+            callback(error, self.hue);
         });
     }
 
@@ -87,8 +89,8 @@ class PlaybulbClass {
             return;
         }
 
-        this.read(function () {
-            callback(null, self.saturation);
+        this.read(function (error) {
+            callback(error, self.saturation);
         });
     }
 
