@@ -4,40 +4,33 @@ class PowerControlPlaybulbClass {
     constructor(playbulb) {
         this.playbulb = playbulb;
         this.brightness = undefined;
+        this.on = undefined;
         this.whiteBrightness = undefined;
+        this.whiteOn = undefined;
     }
 
     getWhitePowerOn(callback) {
-        this.getWhiteBrightness(function (something, value) {
-            callback(null, value > 0);
-        });
+        if (this.whiteOn === undefined) {
+            let self = this;
+            this.getWhiteBrightness(function(error, value) {
+                self.whiteOn = value > 0;
+                callback(null, self.whiteOn);
+            });
+        } else {
+            callback(null, this.whiteOn);
+        }
     }
 
     setWhitePowerOn(value, callback) {
         if (value) {
+            this.whiteOn = true;
             let self = this;
-            this.getWhiteBrightness(function (something, value) {
+            this.getWhiteBrightness(function (error, value) {
                 self.playbulb.setWhiteBrightness(value, callback);
             });
         } else {
+            this.whiteOn = false;
             this.playbulb.setWhiteBrightness(0, callback);
-        }
-    }
-
-    getPowerOn(callback) {
-        this.getBrightness(function (something, value) {
-            callback(null, value > 0);
-        });
-    }
-
-    setPowerOn(value, callback) {
-        if (value) {
-            let self = this;
-            this.getBrightness(function (something, value) {
-                self.playbulb.setBrightness(value, callback);
-            });
-        } else {
-            this.playbulb.setBrightness(0, callback);
         }
     }
 
@@ -49,15 +42,40 @@ class PowerControlPlaybulbClass {
 
         let self = this;
 
-        this.playbulb.getWhiteBrightness(function (something, value) {
+        this.playbulb.getWhiteBrightness(function(error, value) {
             self.whiteBrightness = value;
-            callback(something, value);
+            callback(error, value);
         })
     }
 
     setWhiteBrightness(value, callback) {
         this.whiteBrightness = value;
         this.playbulb.setWhiteBrightness(this.whiteBrightness, callback);
+    }
+
+    getPowerOn(callback) {
+        if (this.on === undefined) {
+            let self = this;
+            this.getBrightness(function(error, value) {
+                self.on = value > 0;
+                callback(null, self.on);
+            });
+        } else {
+            callback(null, this.on);
+        }
+    }
+
+    setPowerOn(value, callback) {
+        if (value) {
+            this.on = true;
+            let self = this;
+            this.getBrightness(function (error, value) {
+                self.playbulb.setBrightness(value, callback);
+            });
+        } else {
+            this.on = false;
+            this.playbulb.setBrightness(0, callback);
+        }
     }
 
     getBrightness(callback) {
@@ -68,9 +86,9 @@ class PowerControlPlaybulbClass {
 
         let self = this;
 
-        this.playbulb.getBrightness(function (something, value) {
+        this.playbulb.getBrightness(function(error, value) {
             self.brightness = value;
-            callback(something, value);
+            callback(error, value);
         })
     }
 
