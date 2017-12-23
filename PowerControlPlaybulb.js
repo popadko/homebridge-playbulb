@@ -60,7 +60,7 @@ class PowerControlPlaybulbClass {
             let self = this;
             this.getBrightness(function(error, value) {
                 if (value) {
-                    self.whiteOn = value > 0;
+                    self.on = value > 0;
                 }
                 callback(error, self.on);
             });
