@@ -13,8 +13,10 @@ class PowerControlPlaybulbClass {
         if (this.whiteOn === undefined) {
             let self = this;
             this.getWhiteBrightness(function(error, value) {
-                self.whiteOn = value > 0;
-                callback(null, self.whiteOn);
+                if (value) {
+                    self.whiteOn = value > 0;
+                }
+                callback(error, self.whiteOn);
             });
         } else {
             callback(null, this.whiteOn);
@@ -57,8 +59,10 @@ class PowerControlPlaybulbClass {
         if (this.on === undefined) {
             let self = this;
             this.getBrightness(function(error, value) {
-                self.on = value > 0;
-                callback(null, self.on);
+                if (value) {
+                    self.whiteOn = value > 0;
+                }
+                callback(error, self.on);
             });
         } else {
             callback(null, this.on);
