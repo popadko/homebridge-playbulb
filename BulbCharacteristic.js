@@ -8,6 +8,10 @@ class BulbCharacteristicClass {
         this.connected = false;
         this.poweredOn = false;
         this.connecting = false;
+        this.connectionTimeout = undefined;
+        this.connectionTimeoutDelay = 20000;
+        this.noblePeripheral = undefined;
+        this.nobleCharacteristic = undefined;
         let self = this;
         noble.on('stateChange', function(state) {
             self.poweredOn = true;
@@ -24,22 +28,24 @@ class BulbCharacteristicClass {
 
     write(bytesBuffer) {
         let self = this;
+        this.setConnectionTimeout();
         this.connect(function() {
             if (self.nobleCharacteristic) {
                 self.nobleCharacteristic.write(bytesBuffer, true, function(error) {
                     if (error) {
                         throw error;
                     }
-                })
+                });
             }
         });
     }
 
     read(callback) {
         let self = this;
+        this.setConnectionTimeout();
         this.connect(function() {
             if (self.nobleCharacteristic) {
-                self.nobleCharacteristic.read(callback)
+                self.nobleCharacteristic.read(callback);
             } else {
                 callback(true);
             }
@@ -50,15 +56,38 @@ class BulbCharacteristicClass {
      * @private
      *
      * @param result
+     * @param noblePeripheral
      * @param nobleCharacteristic
      */
-    connectCallback(result, nobleCharacteristic) {
-        this.connected = false;
+    connectCallback(result, noblePeripheral, nobleCharacteristic) {
+        console.log(result);
+        this.connected = result;
         if (result) {
+            this.noblePeripheral = noblePeripheral;
             this.nobleCharacteristic = nobleCharacteristic;
-            this.connected = true;
+            let self = this;
+            this.noblePeripheral.once('disconnect', function () {
+                self.connectCallback(false);
+            });
         }
         this.connecting = false;
+    }
+
+    /**
+     * @private
+     */
+    setConnectionTimeout() {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = setTimeout(this.connectionTimeoutCallback.bind(this), this.connectionTimeoutDelay);
+    }
+
+    /**
+     * @private
+     */
+    connectionTimeoutCallback() {
+        if (this.noblePeripheral) {
+            this.noblePeripheral.disconnect();
+        }
     }
 
     /**
@@ -99,35 +128,46 @@ class BulbCharacteristicClass {
 
     scanning(callback) {
         let self = this;
-        noble.startScanning();
-        noble.on('discover', function(peripheral) {
-            if (peripheral.address.toLowerCase() === self.bulbAddress.toLowerCase()) {
-                peripheral.connect(function(error) {
-                    if (error) {
-                        throw error;
-                    }
-                    peripheral.discoverAllServicesAndCharacteristics(function(error, services) {
+
+        if (!this.noblePeripheral) {
+            noble.startScanning();
+            noble.on('discover', function(peripheral) {
+                if (peripheral.address.toLowerCase() === self.bulbAddress.toLowerCase()) {
+                    noble.stopScanning();
+                    self.noblePeripheral = peripheral;
+                    self.discoverCharacteristics(callback)
+                }
+            });
+            return;
+        }
+
+        this.discoverCharacteristics(callback);
+    }
+
+    discoverCharacteristics(callback) {
+        let self = this;
+        this.noblePeripheral.connect(function(error) {
+            if (error) {
+                throw error;
+            }
+            self.noblePeripheral.discoverAllServicesAndCharacteristics(function(error, services) {
+                if (error) {
+                    throw error;
+                }
+                services.forEach(function(service) {
+                    service.discoverCharacteristics([], function(error, characteristics) {
                         if (error) {
                             throw error;
                         }
-                        services.forEach(function(service) {
-                            service.discoverCharacteristics([], function(error, characteristics) {
-                                if (error) {
-                                    throw error;
-                                }
-                                characteristics.forEach(function(characteristic) {
-                                    if (characteristic.uuid === self.uuid) {
-                                        noble.stopScanning();
-                                        self.connectCallback(true, characteristic);
-                                        callback();
-                                    }
-                                });
-
-                            });
+                        characteristics.forEach(function(characteristic) {
+                            if (characteristic.uuid === self.uuid) {
+                                self.connectCallback(true, self.noblePeripheral, characteristic);
+                                callback();
+                            }
                         });
                     });
                 });
-            }
+            });
         });
     }
 }
