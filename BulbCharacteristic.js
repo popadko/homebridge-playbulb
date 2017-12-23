@@ -60,7 +60,6 @@ class BulbCharacteristicClass {
      * @param nobleCharacteristic
      */
     connectCallback(result, noblePeripheral, nobleCharacteristic) {
-        console.log(result);
         this.connected = result;
         if (result) {
             this.noblePeripheral = noblePeripheral;
@@ -129,19 +128,26 @@ class BulbCharacteristicClass {
     scanning(callback) {
         let self = this;
 
-        if (!this.noblePeripheral) {
-            noble.startScanning();
-            noble.on('discover', function(peripheral) {
-                if (peripheral.address.toLowerCase() === self.bulbAddress.toLowerCase()) {
-                    noble.stopScanning();
-                    self.noblePeripheral = peripheral;
-                    self.discoverCharacteristics(callback)
-                }
-            });
+        if (this.noblePeripheral) {
+            this.discoverCharacteristics(callback);
             return;
         }
 
-        this.discoverCharacteristics(callback);
+        let connectionTimeout = setTimeout(function () {
+            noble.stopScanning();
+            self.connectCallback(false);
+            callback();
+        }, 20000);
+
+        noble.startScanning();
+        noble.on('discover', function(peripheral) {
+            if (peripheral.address.toLowerCase() === self.bulbAddress.toLowerCase()) {
+                clearTimeout(connectionTimeout);
+                noble.stopScanning();
+                self.noblePeripheral = peripheral;
+                self.discoverCharacteristics(callback)
+            }
+        });
     }
 
     discoverCharacteristics(callback) {
