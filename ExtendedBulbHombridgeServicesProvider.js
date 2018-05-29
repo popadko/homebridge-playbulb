@@ -20,7 +20,7 @@ class ExtendedBulbHombridgeServicesProviderClass {
     }
 
     getServices() {
-        let playbulb = new PlaybulbClass(this.createColorCharacteristic(this.config['address']));
+        let playbulb = new PlaybulbClass(this.createColorCharacteristic(this.config['uuid']));
         let powerControlPlaybulb = new PowerControlPlaybulbClass(playbulb);
 
         let simpleLightbulbService = new this.homebridgeService.Lightbulb(this.config['name'], 'simple');
@@ -61,8 +61,8 @@ class ExtendedBulbHombridgeServicesProviderClass {
     /**
      * @private
      */
-    createColorCharacteristic(bulbAddress) {
-        return new BulbCharacteristicClass(bulbAddress, colorUUID);
+    createColorCharacteristic(bulbUuid) {
+        return new BulbCharacteristicClass(bulbUuid, colorUUID);
     }
 }
 

@@ -2,9 +2,9 @@
 let noble = require('noble');
 
 class BulbCharacteristicClass {
-    constructor(bulbAddress, uuid) {
-        this.bulbAddress = bulbAddress;
-        this.uuid = uuid;
+    constructor(bulbUuid, colorUuid) {
+        this.bulbUuid = bulbUuid;
+        this.colorUuid = colorUuid;
         this.connected = false;
         this.poweredOn = false;
         this.connecting = false;
@@ -141,7 +141,9 @@ class BulbCharacteristicClass {
 
         noble.startScanning();
         noble.on('discover', function(peripheral) {
-            if (peripheral.address.toLowerCase() === self.bulbAddress.toLowerCase()) {
+            console.log(peripheral.advertisement.localName);
+            console.log(peripheral.uuid);
+            if (peripheral.uuid === self.bulbUuid) {
                 clearTimeout(connectionTimeout);
                 noble.stopScanning();
                 self.noblePeripheral = peripheral;
@@ -166,7 +168,7 @@ class BulbCharacteristicClass {
                             throw error;
                         }
                         characteristics.forEach(function(characteristic) {
-                            if (characteristic.uuid === self.uuid) {
+                            if (characteristic.uuid === self.colorUuid) {
                                 self.connectCallback(true, self.noblePeripheral, characteristic);
                                 callback();
                             }
